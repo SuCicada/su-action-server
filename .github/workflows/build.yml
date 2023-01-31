@@ -1,0 +1,35 @@
+name: deploy
+on:
+  push:
+    branches:
+      - master
+
+env:
+  GO_VERSION: 1.18
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        node-version: [ 16.x ]
+        stability: [ prefer-stable ]
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v1
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          check-latest: true
+      - run: apt install make
+      - run: echo "${{secrets.ENV_FILE_CONTENT}}" > .env
+      - run: make
+
+      - name: Webhook
+        if: always()
+        uses: SuCicada/su-action-webhook@latest
+        with:
+          url: ${{ secrets.WEBHOOK_URL }}
+          job: ${{toJSON(job)}}
+          github: ${{toJSON(github)}}
