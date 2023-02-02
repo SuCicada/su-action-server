@@ -25,15 +25,8 @@ func TestGetTemplate(t *testing.T) {
 		"commitMessage": "test",
 		"commitUrl":     "asfasf",
 		"actionUrl":     "asfasf",
-		"github":        InterfaceToMap(action.Github),
-		"job":           InterfaceToMap(action.Job),
+		"github":        utils.InterfaceToMap(action.Github),
+		"job":           utils.InterfaceToMap(action.Job),
 	})
 	fmt.Println(res)
-}
-
-func InterfaceToMap(i interface{}) map[string]interface{} {
-	b, _ := json.Marshal(i)
-	var m map[string]interface{}
-	json.Unmarshal(b, &m)
-	return m
 }

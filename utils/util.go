@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -26,4 +27,11 @@ func Get(k string) string {
 		return ""
 	}
 	return v
+}
+
+func InterfaceToMap(i interface{}) map[string]interface{} {
+	b, _ := json.Marshal(i)
+	var m map[string]interface{}
+	json.Unmarshal(b, &m)
+	return m
 }

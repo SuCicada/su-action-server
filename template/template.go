@@ -56,6 +56,11 @@ func ParseRequest(c *gin.Context) string {
 		fmt.Println("parse request failed", err)
 		return ""
 	}
+	data := GetActionData(action)
+	return GetTemplate(data)
+}
+
+func GetActionData(action model.Action) map[string]interface{} {
 	github := action.Github
 
 	status := action.Job.Status
@@ -69,13 +74,12 @@ func ParseRequest(c *gin.Context) string {
 	commitUrl := fmt.Sprintf("https://github.com/%s/commit/%s", github.Repository, github.Sha)
 	// https: //github.com/${{github.repository}}/actions/runs/${{github.run_id}}
 	actionUrl := fmt.Sprintf("https://github.com/%s/actions/run/%s", github.Repository, github.RunID)
-
-	return GetTemplate(map[string]interface{}{
+	return map[string]interface{}{
 		"status":        status,
 		"commitMessage": commitMessage,
 		"commitUrl":     commitUrl,
 		"actionUrl":     actionUrl,
-		"github":        github,
-		"job":           action.Job,
-	})
+		"github":        utils.InterfaceToMap(github),
+		"job":           utils.InterfaceToMap(action.Job),
+	}
 }

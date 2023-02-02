@@ -10,26 +10,53 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        node-version: [ 16.x ]
-        stability: [ prefer-stable ]
     steps:
+#      - run: echo ${{ secrets.WEBHOOK_URL }}
       - name: Git checkout
         uses: actions/checkout@v1
+      - run: ls -la
       - uses: actions/setup-go@v3
+        if: secrets.DEBUG != 'true'
         with:
           go-version: ${{ env.GO_VERSION }}
           check-latest: true
-      - run: apt install make
-      - run: echo "${{secrets.ENV_FILE_CONTENT}}" > .env
-      - run: make
+          cache-dependency-path: go.sum
+          cache: true
+
+      - name: Install make
+        if: secrets.DEBUG != 'true'
+        run: apt update && apt install -y make rsync
+
+      - name: Build
+        if: secrets.DEBUG != 'true'
+        run: make
+#      - name: Upload
+#        run:  |
+#            echo "${{secrets.SSH_KEY}}" > ~/.ssh/id_rsa
+#            chmod 600 ~/.ssh/id_rsa
+#            make upload
+
+      - name: ssh-scp-deploy
+        uses: marcodallasanta/ssh-scp-deploy@v1.2.0
+        with:
+          local: ./dist/                                                  # Local file path - REQUIRED false - DEFAULT ./
+          remote: ${{secrets.DEPLOY_PATH}}/                                                 # Remote file path - REQUIRED false - DEFAULT ~/
+          host: ${{secrets.SSH_HOST}}                                      # Remote server address - REQUIRED true
+#          port: ${{secrets.PORT}}                                      # Remote server port - REQUIRED false - DEFAULT 22
+          user: ${{secrets.SSH_USERNAME}}                                      # Remote server user - REQUIRED true
+          password: ${{secrets.SSH_PASSWORD}}                              # User password - REQUIRED at least one of "password" or "key"
+          ssh_options: -o StrictHostKeyChecking=no                     # A set of ssh_option separated by -o - REQUIRED false - DEFAULT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+          pre_upload:
+              supervisorctl stop su-action-server &&
+              mkdir -p ${{secrets.DEPLOY_PATH}}
+          post_upload:
+              supervisorctl start su-action-server &&
+              supervisorctl tail su-action-server
 
       - name: Webhook
         if: always()
         uses: SuCicada/su-action-webhook@latest
         with:
-          url: ${{ secrets.WEBHOOK_URL }}
+          url: ${{secrets.WEBHOOK_URL}}
           job: ${{toJSON(job)}}
           github: ${{toJSON(github)}}
