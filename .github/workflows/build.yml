@@ -27,7 +27,7 @@ jobs:
 
       - name: Install make
         if: ${{ env.DEBUG != 'true' }}
-        run: apt update && apt install -y make rsync
+        run: sudo apt update && apt install -y make rsync
 
       - name: Build
         if: ${{ env.DEBUG != 'true' }}
