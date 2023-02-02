@@ -15,8 +15,8 @@ act -j deploy \
   -s DEPLOY_PATH=$DEPLOY_PATH \
   -s SSH_KEY="$(cat ~/.ssh/id_rsa)" \
   --insecure-secrets \
-#  --use-gitignore true \
 #  -s DEBUG=true \
+#  --use-gitignore true \
 #  -v
 
 
